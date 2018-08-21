@@ -80,7 +80,7 @@ It's a small price to pay, so we'll stick with this approach for now.
 
 ### Step 1: Create a Kubernetes cluster
 You need a K8s cluster to start. The easiest way to do this is to create an EKS cluster using the eksctl tool. Open
-the [eks](../eks/README.md) folder in this repo and follow the instructions in the README.
+the [eks](../blob/master/eks/README.md) folder in this repo and follow the instructions in the README.
 
 ### Step 2: Create an EC2 instance and EFS
 You're going to interact with Fabric and the Kubernetes cluster from a bastion host that mounts an EFS drive. EFS is
