@@ -6,9 +6,9 @@ and configure this for use on the bastion host
 
 # Hyperledger Fabric on Kubernetes
 
-This workshop builds remote Hyperledger Fabric peers in other AWS accounts/regions, connects them to the Fabric orderer 
-organisation, installs the 'marbles' chaincode, and allows workshop participants to have fun swapping marbles. Each workshop 
-participant will run their own Fabric peer in their own AWS account, and see the Fabric state via a local Node.js application 
+This workshop builds remote Hyperledger Fabric peers in other AWS accounts/regions, connects them to the Fabric orderer
+organisation, installs the 'marbles' chaincode, and allows workshop participants to have fun swapping marbles. Each workshop
+participant will run their own Fabric peer in their own AWS account, and see the Fabric state via a local Node.js application
 that connects to their own local peer and reads their own local copy of the ledger.
 
 The workshop gives participants the experience of building their own Kubernetes cluster before running a Fabric CA and
@@ -41,12 +41,12 @@ you have a Windows laptop I'd strongly recommend using Cloud9 as this workshop h
 
 If you choose to run the workshop from your laptop, you'll need to install the following:
 
-* AWS CLI with the appropriate AWS API credentials pointing to the AWS account and region where you will deploy Kubernetes. You can use 
-an [~/.aws/credentials file](https://docs.aws.amazon.com/cli/latest/userguide/cli-config-files.html) 
-or [environment variables](https://docs.aws.amazon.com/cli/latest/userguide/cli-environment.html). For more information 
+* AWS CLI with the appropriate AWS API credentials pointing to the AWS account and region where you will deploy Kubernetes. You can use
+an [~/.aws/credentials file](https://docs.aws.amazon.com/cli/latest/userguide/cli-config-files.html)
+or [environment variables](https://docs.aws.amazon.com/cli/latest/userguide/cli-environment.html). For more information
 read the [AWS documentation](https://docs.aws.amazon.com/cli/latest/userguide/cli-environment.html).
 * Git installed locally. See https://git-scm.com/downloads
-* Node JS installed. You'll need version > 6.10.1, but it must be 6.x.x. See https://nodejs.org/en/download/. If you have a different 
+* Node JS installed. You'll need version > 6.10.1, but it must be 6.x.x. See https://nodejs.org/en/download/. If you have a different
 version, you can uninstall it (on Mac), and install the correct version using homebrew:
 
 ```bash
@@ -75,21 +75,21 @@ $ npm -v
 ## Getting Started
 We create the Kubernetes cluster first, in Step 1. This has the advantage that we can deploy the EC2 bastion (created in Step 2)
 into the same VPC as the Kubernetes cluster, and mount EFS into the Kubernetes cluster. The disadvantage is that we must
-configure kubectl on the EC2 bastion to connect to the Kubernetes cluster via the config in ~/.kube/config - see Step 3. 
-It's a small price to pay, so we'll stick with this approach for now. 
- 
+configure kubectl on the EC2 bastion to connect to the Kubernetes cluster via the config in ~/.kube/config - see Step 3.
+It's a small price to pay, so we'll stick with this approach for now.
+
 ### Step 1: Create a Kubernetes cluster
 You need a K8s cluster to start. The easiest way to do this is to create an EKS cluster using the eksctl tool. Open
-the `eks` folder in this repo and follow the instructions in the README.
+the [eks](../eks/readme.md) folder in this repo and follow the instructions in the README.
 
-### Step 2: Create an EC2 instance and EFS 
-You're going to interact with Fabric and the Kubernetes cluster from a bastion host that mounts an EFS drive. EFS is 
+### Step 2: Create an EC2 instance and EFS
+You're going to interact with Fabric and the Kubernetes cluster from a bastion host that mounts an EFS drive. EFS is
 required to store the crypto material used by Fabric, and you'll need to copy the appropriate certs/keys to/from the EFS drive.
-The EFS volume must be accessible from both the EC2 bastion and the worker nodes in the Kubernetes cluster. 
+The EFS volume must be accessible from both the EC2 bastion and the worker nodes in the Kubernetes cluster.
 
 Follow the steps below, which will create the EFS and make it available to the K8s cluster.
 
-On your laptop or Cloud9 instance, clone this repo into any directory you choose. After Step 2 you can delete the repo again. You only need 
+On your laptop or Cloud9 instance, clone this repo into any directory you choose. After Step 2 you can delete the repo again. You only need
 it for creating the EC2 bastion and the EFS drive:
 
 ```bash
@@ -104,18 +104,18 @@ three subnets.
 * Keyname is the AWS EC2 keypair you used for your EKS cluster. You'll use the same keypair to access the EC2 bastion created by deploy-ec2.sh
 * VolumeName is the name assigned to your EFS volume. There is no need to change this
 * Region should match the region where your K8s cluster is deployed
-* If your AWS CLI already points to the account & region your Kubernetes cluster was created, you can go ahead and run the 
+* If your AWS CLI already points to the account & region your Kubernetes cluster was created, you can go ahead and run the
 command below. If you are using AWS CLI profiles, add a --profile argument to your `aws cloudformation deploy` statement
 in efs/deploy-ec2.sh
 
-Once all the parameters are set, in a terminal window, run 
+Once all the parameters are set, in a terminal window, run
 
 ```bash
-./efs/deploy-ec2.sh 
+./efs/deploy-ec2.sh
 ```
 
-Check the CloudFormation console for completion. Once the CFN stack is complete, SSH to the EC2 bastion instance using the keypair 
-you entered in the efs/deploy-ec2.sh above. Replace the public DNS of your EC2 bastion instance and the path to your keypair 
+Check the CloudFormation console for completion. Once the CFN stack is complete, SSH to the EC2 bastion instance using the keypair
+you entered in the efs/deploy-ec2.sh above. Replace the public DNS of your EC2 bastion instance and the path to your keypair
 file in the statement below. You can find the DNS name of your EC2 bastion in the AWS EC2 Console - look in the CloudFormation
 console for the instance created by the CloudFormation template:
 
@@ -125,12 +125,12 @@ ssh ec2-52-206-72-54.compute-1.amazonaws.com -i eks-c9-keypair.pem
 
 ### Step 3: Prepare the EC2 instance for use
 The EC2 instance you created in Step 2 should already have kubectl and the AWS CLI installed. However, kubectl will have no
-context and will not be pointing to a kubernetes cluster, and AWS CLI will have no credentials. We need to point kubectl to 
+context and will not be pointing to a kubernetes cluster, and AWS CLI will have no credentials. We need to point kubectl to
 the K8s cluster we created in Step 1, and we need to provide credentials for AWS CLI.
 
 To provide AWS CLI credentials, we'll copy them either from our Mac or Cloud9 - i.e. whichever we used to create the EKS cluster.
 
-We'll do the same for the kube config file, i.e. copy the contents of the kube config file from 
+We'll do the same for the kube config file, i.e. copy the contents of the kube config file from
 your Mac or Cloud9 instance. If you followed the default steps in Step 1, you will have a kube config file called
 ./kubeconfig.eks-fabric.yaml, in the same directory you were in when you created the EKS cluster. We want to copy this
 file to the EC2 bastion instance.
@@ -156,7 +156,7 @@ scp -i eks-c9-keypair.pem  ~/.aws/config  ec2-user@ec2-52-206-72-54.compute-1.am
 scp -i eks-c9-keypair.pem  ~/.aws/credentials  ec2-user@ec2-52-206-72-54.compute-1.amazonaws.com:/home/ec2-user/credentials                                                                     
 ```
 
-Now SSH into the EC2 instance created above: 
+Now SSH into the EC2 instance created above:
 
 ```bash
 ssh ec2-52-206-72-54.compute-1.amazonaws.com -i eks-c9-keypair.pem
@@ -215,11 +215,11 @@ git clone https://github.com/aws-samples/hyperledger-on-kubernetes
 This repo contains the scripts you'll use to setup your Fabric peer.
 
 ### Step 5: Configure the EFS server URL
-On the EC2 instance created in Step 2 above, in the newly cloned hyperledger-on-kubernetes directory, update the script 
-'gen-fabric.sh' so that the EFSSERVER variable contains the full URL of the EFS server created in 
+On the EC2 instance created in Step 2 above, in the newly cloned hyperledger-on-kubernetes directory, update the script
+'gen-fabric.sh' so that the EFSSERVER variable contains the full URL of the EFS server created in
 Step 2. Do the following:
 
-In the AWS EFS console, obtain the full EFS URL for your new EFS. The URL should look something like this: 
+In the AWS EFS console, obtain the full EFS URL for your new EFS. The URL should look something like this:
 EFSSERVER=fs-12a33ebb.efs.us-west-2.amazonaws.com
 
 Then, back on the EC2 instance:
@@ -232,13 +232,13 @@ vi gen-fabric.sh
 
 Look for the line starting with `EFSSERVER=`, and replace the URL with the one you copied from the EFS console. Using
 vi you can simply move the cursor over the first character after `EFSSERVER=` and hit the 'x' key until the existing
-URL is deleted. Then hit the 'i' key and ctrl-v to paste the new URL. Hit escape, then shift-zz to save and exit vi. 
+URL is deleted. Then hit the 'i' key and ctrl-v to paste the new URL. Hit escape, then shift-zz to save and exit vi.
 See, you're a vi expert already.
 
 ### Step 6: Get the Fabric crypto information
 Before creating your Fabric peer you'll need the certificate and key information for the organisation the peer belongs
 to. The steps below are a quick and dirty way of obtaining this info - not recommended for production use, but it will
-save us plenty of time fiddling around with keys, certificates and certificate authorities. 
+save us plenty of time fiddling around with keys, certificates and certificate authorities.
 
 A quick method of setting up a remote peer for an existing org involves copying the existing crypto material. We've made
 this information available in an S3 bucket - you just need to download it and copy it to your EFS as follows:
@@ -257,7 +257,7 @@ ls -l
 ```bash
 cd /
 rm -rf /opt/share
-tar xvf ~/opt.tar 
+tar xvf ~/opt.tar
 ls -lR /opt/share
 ```
 
@@ -309,16 +309,16 @@ vi remote-peer/scripts/env-remote-peer.sh
 * Edit the file `remote-peer/scripts/env-remote-peer.sh`. Update the following fields:
     * Set PEER_ORGS to one of the organisations in the Fabric network. Example: PEER_ORGS="org1"
     * Set PEER_DOMAINS to one of the domains in the Fabric network. Example: PEER_DOMAINS="org1"
-    * Set PEER_PREFIX to any name you choose. This will become the name of your peer on the network. 
+    * Set PEER_PREFIX to any name you choose. This will become the name of your peer on the network.
       Try to make this unique within the network - your alias would work. Example: PEER_PREFIX="michaelpeer"
 * Don't change anything else.
 
 TIP: You'll be using the peer prefix and organisation you set above in many places. It will make your life easier
-if you do a search/replace in this README, replacing all 'michaelpeer' with your prefix, and all 'org' with 
+if you do a search/replace in this README, replacing all 'michaelpeer' with your prefix, and all 'org' with
 the org you have selected. That way you can copy/paste the commands I provide below instead of having to edit them.
 
 ### Step 8: Register Fabric identities with the Fabric certificate authority
-Before we can start our Fabric peer we must register it with the Fabric certificate authority (CA). All participants in 
+Before we can start our Fabric peer we must register it with the Fabric certificate authority (CA). All participants in
 a Fabric network have identities (Fabric is a private, permissioned blockchain network), and these identities are created
 by a CA. This step will start Fabric CA and register our peer:
 
@@ -332,10 +332,10 @@ Now let's investigate the results of the previous script. In the statements belo
 selected in step 7:
 
 ```bash
-kubectl get po -n org1 
+kubectl get po -n org1
 ```
 
-You should see something similar to this. It shows us that so far, in Kubernetes, we have started a root CA (rca), 
+You should see something similar to this. It shows us that so far, in Kubernetes, we have started a root CA (rca),
 an intermediate CA (ica), and a pod that registers peers identities (register-p).
 
 ```bash
@@ -365,7 +365,7 @@ $ kubectl logs register-p-org1-66bd5688b4-fhzmh -n org1
 2018/07/22 02:52:31 [DEBUG] Client configuration settings: &{URL:https://ica-org1-admin:ica-org1-adminpw@ica-org1.org1:7054 MSPDir:msp TLS:{Enabled:true CertFiles:[/data/org1-ca-chain.pem] Client:{KeyFile: CertFile:}} Enrollment:{ Name: Secret:**** Profile: Label: CSR:<nil> CAName: AttrReqs:[]  } CSR:{CN:ica-org1-admin Names:[{C:US ST:North Carolina L: O:Hyperledger OU:Fabric SerialNumber:}] Hosts:[register-p-org1-66bd5688b4-fhzmh] KeyRequest:<nil> CA:<nil> SerialNumber:} ID:{Name: Type:client Secret: MaxEnrollments:0 Affiliation:org1 Attributes:[] CAName:} Revoke:{Name: Serial: AKI: Reason: CAName: GenCRL:false} CAInfo:{CAName:} CAName: CSP:0xc42016df80}
 2018/07/22 02:52:31 [DEBUG] Entered runEnroll
 .
-. 
+.
 .
 2018/07/22 02:52:31 [DEBUG] Sending request
 POST https://ica-org1.org1:7054/enroll
@@ -380,7 +380,7 @@ statusCode=201 (201 Created)
 ##### 2018-07-22 02:52:32 Registering michaelpeer1-org1 with ica-org1.org1
 2018/07/22 02:52:32 [DEBUG] Home directory: /root/cas/ica-org1.org1
 .
-. 
+.
 .
 2018/07/22 02:52:32 [DEBUG] Sending request
 POST https://ica-org1.org1:7054/register
@@ -395,7 +395,7 @@ Password: michaelpeer1-org1pw
 
 ### Step 9: Start the peer
 We are now ready to start the new peer. The peer runs as a pod in Kubernetes. Let's take a look at the pod spec before
-we deploy it. Replace 'michaelpeer1' with the name of your peer, and replace 'org1' with the org you selected. If you 
+we deploy it. Replace 'michaelpeer1' with the name of your peer, and replace 'org1' with the org you selected. If you
 are unsure, you can simply do 'ls k8s' to view the yaml files that were generated based on your selections, and find
 the file start starts with 'fabric-deployment-remote-peer-'.
 
@@ -472,7 +472,7 @@ peer
 This will show you the help message for the Fabric 'peer' CLI. We'll use this to join a channel, install chaincode
 and invoke transactions.
 
-Firstly, we need to join a channel. To join a channel you'll need to be an admin user, and you'll need access to the 
+Firstly, we need to join a channel. To join a channel you'll need to be an admin user, and you'll need access to the
 channel genesis block. The channel genesis block is stored on the EFS drive, and you can see it by typing:
 
 ```bash
@@ -499,7 +499,7 @@ drwx------ 5 500 500  6144 Jul 30 05:15 orgs
 drwxr-xr-x 2 500 500  6144 Aug  9 03:34 tls
 ```
 
-Look for the file titled `mychannel.block`. The channel genesis block provides the configuration for the channel. It's the 
+Look for the file titled `mychannel.block`. The channel genesis block provides the configuration for the channel. It's the
 first block added to a channel, and forms 'block 0' in the Fabric blockchain for that channel. As a matter of interest,
 Fabric supports multiple blockchains within the same Fabric network, each blockchain associated with a Fabric channel.
 
@@ -509,7 +509,7 @@ We'll use the following ENV variables to indicate which peer we want to interact
 * Change 'michaelpeer' to match the name of your peer
 * Change 'org1' to the name of the org you belong to. Change it everywhere it appears
 
-You should still be inside the register container at this point. Copy all the variables below, and paste them into your 
+You should still be inside the register container at this point. Copy all the variables below, and paste them into your
 terminal window. If you exit the register container, and 'exec' back in later, remember to rerun these export statements.
 
 ```bash
@@ -528,7 +528,7 @@ Let's check to see whether the peer we specified in the export statement above h
 peer channel list
 ```
 
-You should see the following: 
+You should see the following:
 
 ```bash
 # peer channel list
@@ -557,13 +557,13 @@ mychannel
 2018-07-26 03:42:30.944 UTC [main] main -> INFO 002 Exiting.....
 ```
 
-You should see that your peer has now joined the channel. 
+You should see that your peer has now joined the channel.
 
 ### Step 11: Confirm peer has joined channel
-To confirm the peer has joined the channel you'll need to check the peer logs. If there are existing blocks on the channel 
+To confirm the peer has joined the channel you'll need to check the peer logs. If there are existing blocks on the channel
 you should see them replicating to the new peer. Look for messages in the log file such as `Channel [mychannel]: Committing block [14385] to storage` -
 you can find these by doing a search in your terminal window, or using grep.
-To view the peer logs, exit the 'register' container (by typing 'exit' on the command line). This will return you to 
+To view the peer logs, exit the 'register' container (by typing 'exit' on the command line). This will return you to
 your EC2 bastion instance. Then enter (replacing the name of the peer with your own):
 
 ```bash
@@ -572,7 +572,7 @@ kubectl logs deploy/michaelpeer1-org1 -n org1 -c michaelpeer1-org1
 
 ### Step 12: Install the marbles chaincode
 To install the marbles chaincode we'll first clone the chaincode repo to our 'register' container, then install the
-chaincode to the peer. 'exec' back in to the 'register' container, rerun the export statements from Step 10, and do 
+chaincode to the peer. 'exec' back in to the 'register' container, rerun the export statements from Step 10, and do
 the following:
 
 ```bash
@@ -620,13 +620,13 @@ Name: marbles-workshop, Version: 1.0, Path: github.com/hyperledger/marbles/chain
 ```
 
 ### Step 13: Creating a user
-So far we have interacted with the peer node using the Admin user. This might not have been apparent, but the export 
+So far we have interacted with the peer node using the Admin user. This might not have been apparent, but the export
 statements we used include the following line, 'export CORE_PEER_MSPCONFIGPATH=/data/orgs/org1/admin/msp', which
 sets the MSP (membership service provider) context to an admin user. Admin was used to join the channel and install the chaincode,
-but to invoke transactions and query the ledger state we need a user. Users are created by fabric-ca, a tool provided for 
+but to invoke transactions and query the ledger state we need a user. Users are created by fabric-ca, a tool provided for
 us by Fabric to act as a root CA and manage the registration and enrollment of identities.
 
-Once again, 'exec' into the register container and run the export statements from Step 10. Replace 'org1' in the statements 
+Once again, 'exec' into the register container and run the export statements from Step 10. Replace 'org1' in the statements
 below to match the org you have chosen, and execute the statements.
 
 ```bash
@@ -692,15 +692,15 @@ export CORE_PEER_MSPCONFIGPATH=/data/orgs/org1/admin/msp
 ### Step 14: Invoke transactions in Fabric
 Let's run a query. In Fabric, a query will execute on the peer node and query the world state, which is the current
 state of the ledger. World state is stored in either a CouchDB or LevelDB key-value store. The query below will
-return the latest marble owners. 
+return the latest marble owners.
 
 When we say 'run a query', we really mean 'execute chaincode that queries the world state'. In Fabric, chaincode executes
-inside a Docker container. The first time you run chaincode it may take around 30 seconds as the Docker container that hosts 
+inside a Docker container. The first time you run chaincode it may take around 30 seconds as the Docker container that hosts
 the chaincode is downloaded and created.
 
 ```bash
 export CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/orgs/org1/user/msp
-peer chaincode query -C mychannel -n marbles-workshop -c '{"Args":["read_everything"]}' 
+peer chaincode query -C mychannel -n marbles-workshop -c '{"Args":["read_everything"]}'
 ```
 
 ```bash
@@ -712,7 +712,7 @@ Query Result: {"owners":[{"docType":"marble_owner","id":"o9999999999999999990","
 ```
 
 Invoking a transaction is different to running a query. Whereas a query runs locally on your own peer, a transaction
-first runs locally, simulating the transaction against your local world state, then the results are sent to the 
+first runs locally, simulating the transaction against your local world state, then the results are sent to the
 orderer. The orderer groups the transactions into blocks and distributes them to all peer nodes. All the peers
 then update their ledgers and world state with each transaction in the block.
 
@@ -721,7 +721,7 @@ Since the transaction is sent to the orderer, you need to provide the orderer en
 ```bash
 export ORDERER_CONN_ARGS="-o a8a50caf493b511e8834f06b86f026a6-77ab14764e60b4a1.elb.us-west-2.amazonaws.com:7050"
 peer chaincode invoke -C mychannel -n marbles-workshop -c '{"Args":["set_owner","m999999999990","o9999999999999999990", "United Marbles"]}' $ORDERER_CONN_ARGS
-peer chaincode query -C mychannel -n marbles-workshop -c '{"Args":["read_everything"]}' 
+peer chaincode query -C mychannel -n marbles-workshop -c '{"Args":["read_everything"]}'
 ```
 
 ### Step 15: Connect an application to your Fabric peer
@@ -731,7 +731,7 @@ network, and what activities are being carried out by the other workshop partici
 
 The Marbles client application uses the Fabric SDK and requires connectivity to three Fabric components:
 
-* Orderer: the Orderer was created by the facilitator before the workshop started. The facilitator will provide the endpoint 
+* Orderer: the Orderer was created by the facilitator before the workshop started. The facilitator will provide the endpoint
 (in fact, it should have been provided for you in Step 14, and the facilitator should have updated this README with the correct
 endpoint. See the statement 'export ORDERER_CONN_ARGS=')
 * Peer: this is the peer you started in step 9. We will expose this using an NLB below (NLB because peers communicate using gRPC)
@@ -746,9 +746,9 @@ the Permissions tab, find the policy titled `EKS-eks-fabric-ServiceRole-NLB`. Se
 permission to the policy: "iam:CreateServiceLinkedRole". Make sure to use the same indents, and include a comma if
 necessary. Review and save the policy.
 
-Let's create the AWS Network Load Balancer (NLB) endpoints for the peer and the ca. The K8s YAML files to create these would 
+Let's create the AWS Network Load Balancer (NLB) endpoints for the peer and the ca. The K8s YAML files to create these would
 have been generated for you. On your EC2 bastion instance (make sure you're on the EC2 instance, and not 'exec'd into the register
-container) replace the org numbers below to match yours, and the name of the peer (i.e. michaelpeer) to match your own. 
+container) replace the org numbers below to match yours, and the name of the peer (i.e. michaelpeer) to match your own.
 These files should already exist in the k8s/ directory:
 
 ```bash
@@ -800,7 +800,7 @@ them in Step 16.
 In the next step we'll configure Marbles to use these endpoints, and connect the application to the Fabric network.
 
 ### Step 16: Preparing the Marbles application
-To start, let's clone the Marbles application to your laptop or Cloud9 instance. Makes sure you are on your laptop or 
+To start, let's clone the Marbles application to your laptop or Cloud9 instance. Makes sure you are on your laptop or
 Cloud9 environment (whichever one you have used for the earlier parts of this workshop), and not SSH'd into the EC2 bastion:
 
 ```bash
@@ -832,8 +832,8 @@ Then do:
 npm install
 ```
 
-To configure the connectivity between the Marbles app and the Fabric network, Marbles requires a connection profile that 
-contains the connectivity endpoints. I have provided a template of this file for you in the hyperledger-on-kubernetes repo. Use cURL 
+To configure the connectivity between the Marbles app and the Fabric network, Marbles requires a connection profile that
+contains the connectivity endpoints. I have provided a template of this file for you in the hyperledger-on-kubernetes repo. Use cURL
 to download the files you'll need. If using the cURL method, make sure you are in the marbles directory, in the marbles repo:
 
 ```bash
@@ -847,7 +847,7 @@ Still in the config directory, edit connection_profile_eks.json:
 * Do a global search & replace on 'org1', replacing it with the org you have chosen
 * Do a global search & replace on 'michaelpeer', replacing it with your peer name
 * In the 'replace' commands below, make sure you do not change the port number, nor remove the protocol (e.g. grpc://)
-* Replace the orderer URL with the NLB endpoint provided by your facilitator (The same one you used in Step 14. See the 
+* Replace the orderer URL with the NLB endpoint provided by your facilitator (The same one you used in Step 14. See the
 statement 'export ORDERER_CONN_ARGS='). If the facilitator has already updated this in the README, the address below
 should be correct:
 
@@ -857,8 +857,8 @@ should be correct:
             "url": "grpc://a8a50caf493b511e8834f06b86f026a6-77ab14764e60b4a1.elb.us-west-2.amazonaws.com:7050",
 ```
 
-* Replace the peer URL (both url and eventUrl) with the endpoint you obtained in Step 15 when 
-running `kubectl describe svc <your peer service name> -n org1` 
+* Replace the peer URL (both url and eventUrl) with the endpoint you obtained in Step 15 when
+running `kubectl describe svc <your peer service name> -n org1`
 
 ```json
     "peers": {
@@ -867,8 +867,8 @@ running `kubectl describe svc <your peer service name> -n org1`
             "eventUrl": "grpc://a55e52d7d93c511e8a5200a2330c2ef3-25d11c6db68acd98.elb.us-east-1.amazonaws.com:7052",
 ```
 
-* Replace the certificateAuthorities URL with the endpoint you obtained in Step 15 when 
-running `kubectl describe svc <your CA service name> -n org1` 
+* Replace the certificateAuthorities URL with the endpoint you obtained in Step 15 when
+running `kubectl describe svc <your CA service name> -n org1`
 
 ```json
     "certificateAuthorities": {
@@ -908,7 +908,7 @@ You can run the Marbles application either on your laptop or on your Cloud9 inst
 NOTE: Marbles running locally cannot connect to the ELB port 7054 if you are running your VPN software. Please
 stop the VPN before connecting.
 
-On your laptop, in the marbles repo directory (not the config directory, which you may be in), in the root folder of 
+On your laptop, in the marbles repo directory (not the config directory, which you may be in), in the root folder of
 the repo, run the following:
 
 ```bash
@@ -936,7 +936,7 @@ Do the following to fix this:
 In the `marbles` directory:
 
 ```bash
-vi config/marbles_eks.json 
+vi config/marbles_eks.json
 ```
 
 Change this line as follows:
@@ -951,7 +951,7 @@ to
 "port": 8080
 ```
 
-In Cloud9, in the marbles repo directory (not the config directory, which you may be in), in the root folder of 
+In Cloud9, in the marbles repo directory (not the config directory, which you may be in), in the root folder of
 the repo, run the following:
 
 ```bash
@@ -971,7 +971,7 @@ debug: Open your browser to http://localhost:8080 and login as "admin"
 At the top of your Cloud9 page you'll see a menu with the option `AWS Cloud9` at the top left. Top right you will
 see a link titled `Preview`. Select this, then select `Preview Running Application`. This will open the Marbles UI
 in a browser window within the Cloud9 page. You can also open this in a browser. In the Cloud9 browser window, on the
-right hand side next to the URL box, there is a square with an arrow. Clicking this will open the page in your 
+right hand side next to the URL box, there is a square with an arrow. Clicking this will open the page in your
 default browser.
 
 #### Running Marbles
@@ -979,7 +979,7 @@ After completing one of the steps above, continue with the following steps in th
 
 * Click 'Settings' and set Story Mode ON. This will show you what Fabric is doing behind the scenes when you create
 new marbles or transfer them.
-* Click the magnifying glass on the left, then click on a marble to see the transactions related to that marble. 
+* Click the magnifying glass on the left, then click on a marble to see the transactions related to that marble.
 
 Now go ahead and drag marbles from one owner to another, or create new marbles. Watch how the UI explains what is
 happening inside Fabric. For further 'geek-level' detail, check out the terminal window where you started the marbles
@@ -997,13 +997,13 @@ On your EC2 bastion instance, do the following:
 export CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/orgs/org1/user/msp
 ```
 
-Execute the chaincode below to add yourself as a marble owner. Change the numbers below to some other random number (i.e. 
-o9999999999999999990 and m999999999990 - just make sure you have the same or fewer digits), and change 'bob' to your 
-alias (something unique). MAKE SURE you use both the 'o' and 'm' prefixes in your owner and marble names. The marbles 
-app depends on them. 
+Execute the chaincode below to add yourself as a marble owner. Change the numbers below to some other random number (i.e.
+o9999999999999999990 and m999999999990 - just make sure you have the same or fewer digits), and change 'bob' to your
+alias (something unique). MAKE SURE you use both the 'o' and 'm' prefixes in your owner and marble names. The marbles
+app depends on them.
 
-If you execute both invoke statements immediately after each other, the second one will probably fail. Any idea why? 
-If you have Story Mode ON, as suggested above, and you watch what happens in Fabric when you transfer a marble, it will 
+If you execute both invoke statements immediately after each other, the second one will probably fail. Any idea why?
+If you have Story Mode ON, as suggested above, and you watch what happens in Fabric when you transfer a marble, it will
 give you a strong hint.
 
 You may need to wait a few seconds between the invoke statements, and for your new owner to be reflected in the query.
@@ -1071,7 +1071,7 @@ To see the logs for a specific pod, using the pod name from 'get po'. Do this fi
 kubectl logs <pod name> -n org1
 ```
 
-It may error, asking for a container name. It will then provide you with a list of the container names. Rerun the 
+It may error, asking for a container name. It will then provide you with a list of the container names. Rerun the
 statement with a container name:
 
 ```bash
@@ -1083,9 +1083,3 @@ To describe a pod and see its associated details:
 ```bash
 kubectl describe po <pod name> -n org1
 ```
-
-
-
-
-
-
